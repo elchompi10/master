@@ -2745,6 +2745,27 @@
                     <div class="file-name" id="fileName"></div>
                     <div class="file-size-warn" id="fileSizeWarn"></div>
                   </div>
+
+                  <div style="display:flex; gap:8px; margin-top:8px">
+                    <button class="btn btn-primary" id="btnAnalyze">Analizar</button>
+                    <button class="btn btn-secondary" id="btnAdvice">Recomendaciones</button>
+                  </div>
+
+                  <div style="display:flex; gap:8px; margin-top:8px">
+                    <button class="btn btn-automaster" id="btnMasterSync">Master (sync)</button>
+                    <button class="btn btn-ref" id="btnMasterAsync">Master (enqueue)</button>
+                  </div>
+
+                  <div style="margin-top:8px">
+                    <label class="mini-label">Compresión paralela (opcional)</label>
+                    <div style="display:flex; gap:6px; align-items:center">
+                      <input type="checkbox" id="parallelBypass" checked /> <label for="parallelBypass">Bypass</label>
+                      <label style="margin-left:10px">Mix</label>
+                      <input type="range" id="parallelMix" min="0" max="1" step="0.01" value="0.12" style="width:140px">
+                      <span class="mini-tag" id="parallelMixVal">0.12</span>
+                    </div>
+                  </div>
+
                   <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;opacity:.85;cursor:pointer;">
                     <input type="checkbox" id="saveToLibraryChk" checked />
                     Guardar en mi librería del servidor
