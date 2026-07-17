@@ -5568,7 +5568,13 @@
           glue_attack_ms: document.getElementById("s-glue-attack").value,
           glue_release_ms: document.getElementById("s-glue-release").value,
           glue_makeup_db: document.getElementById("s-glue-makeup").value,
+          clipper_bypass: document.getElementById("s-clip-bypass").checked,
+          clipper_mode: document.getElementById("s-clip-mode").value,
+          clipper_ceiling: document.getElementById("s-clip-ceiling").value,
+          clipper_drive_db: document.getElementById("s-clip-drive").value,
           hp_cutoff: document.getElementById("s-hp").value,
+          lp_bypass: document.getElementById("s-lp-bypass").checked,
+          lp_cutoff: document.getElementById("s-lp-cutoff").value,
           high_shelf_gain_db: document.getElementById("s-air").value,
           high_shelf_freq_hz: document.getElementById("s-shelf-freq").value,
           eq1_freq: document.getElementById("s-eq1freq").value,
@@ -5636,6 +5642,10 @@
         // Dynamic EQ
         obj.parallel_bypass = document.getElementById("parallelBypass").checked;
         obj.parallel_mix = document.getElementById("parallelMix").value;
+        obj.parallel_threshold_db = document.getElementById("s-thresh").value;
+        obj.parallel_ratio = document.getElementById("s-ratio").value;
+        obj.parallel_attack_ms = document.getElementById("s-cattack").value;
+        obj.parallel_release_ms = document.getElementById("s-crelease").value;
         obj.dyneq_bypass = document.getElementById("s-dyneq-bypass").checked;
         obj.dyneq_freq = document.getElementById("s-dyneq-freq").value;
         obj.dyneq_q = document.getElementById("s-dyneq-q").value;
