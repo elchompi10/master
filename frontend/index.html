@@ -5556,6 +5556,8 @@
           mb_stereo_high_crossover: document.getElementById("s-mb-sw-highx").value,
         };
         // Dynamic EQ
+        obj.parallel_bypass = document.getElementById("parallelBypass").checked;
+        obj.parallel_mix = document.getElementById("parallelMix").value;
         obj.dyneq_bypass = document.getElementById("s-dyneq-bypass").checked;
         obj.dyneq_freq = document.getElementById("s-dyneq-freq").value;
         obj.dyneq_q = document.getElementById("s-dyneq-q").value;
@@ -5988,6 +5990,65 @@
         clearResults();
         const paramsObj = collectMasterParamsObj();
         renderParamsPreview(paramsObj, { onConfirm: submitMasterJob });
+      });
+
+      // Parallel mix UI update
+      document.getElementById("parallelMix").addEventListener("input", (e) => {
+        document.getElementById("parallelMixVal").textContent = parseFloat(e.target.value).toFixed(2);
+      });
+
+      // Master (enqueue) from Paso 1 — reuses existing submitMasterJob flow
+      document.getElementById("btnMasterAsync").addEventListener("click", () => {
+        document.getElementById("btnMaster").click();
+      });
+
+      // Master (sync) — immediate processing and download
+      async function submitMasterSync() {
+        if (!selectedFile) {
+          showStatus(null, "Selecciona un archivo primero", "error");
+          return;
+        }
+        clearResults();
+        showStatus(null, "Procesando (sync)…", "processing");
+        const fd = new FormData();
+        if (_previewLibraryId) fd.append("library_id", _previewLibraryId);
+        else fd.append("file", selectedFile);
+        try {
+          const params = buildParams();
+          const url = `${API()}/master/sync?${params.toString()}`;
+          const res = await fetch(url, { method: "POST", body: fd });
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`HTTP ${res.status}: ${text}`);
+          }
+          const blob = await res.blob();
+          let filename = "mastered.wav";
+          const cd = res.headers.get("content-disposition");
+          if (cd) {
+            const m = cd.match(/filename\*=UTF-8''([^;]+)/) || cd.match(/filename=\"?([^\";]+)\"?/);
+            if (m) filename = decodeURIComponent(m[1]);
+          }
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          showStatus(null, "Master sync completado ✓", "done");
+        } catch (e) {
+          console.error("Error en master sync:", e);
+          showStatus(null, "Error: " + e.message, "error");
+        }
+      }
+
+      document.getElementById("btnMasterSync").addEventListener("click", async () => {
+        if (!selectedFile) {
+          showStatus(null, "Selecciona un archivo primero", "error");
+          return;
+        }
+        clearResults();
+        const paramsObj = collectMasterParamsObj();
+        renderParamsPreview(paramsObj, { onConfirm: submitMasterSync, confirmLabel: "Master (descarga)" });
       });
 
       // ── AUTO-MASTERING IA (la IA decide todo y encola el job) ───────────────────
