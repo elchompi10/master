@@ -4,8 +4,8 @@ Procesa el audio en bloques (chunks) entregando PCM16 y métricas completas
 (LUFS, peak, RMS, correlación estéreo, GR multibanda, GR banda ancha y
 glue) para visualización en vivo sin bloquear la interfaz.
 """
-import numpy as np
-from mastering import apply_mastering_chain, measure_lufs_integrated, stereo_correlation, recommend_dynamic_eq
+import numpy as np # type: ignore
+from mastering import apply_mastering_chain, measure_lufs_integrated, stereo_correlation, recommend_dynamic_eq, true_peak_dbfs, mono_compatibility_db
 
 CHUNK_SECONDS_DEFAULT = 2.0
 DEFAULT_OVERLAP_SECONDS = 0.02
@@ -104,6 +104,16 @@ def iter_mastering_chunks(audio: np.ndarray, sr: int,
         except Exception:
             corr = 0.0
 
+        try:
+            true_peak = true_peak_dbfs(out_block, sr)
+        except Exception:
+            true_peak = peak_db
+
+        try:
+            mono_compat = mono_compatibility_db(out_block)
+        except Exception:
+            mono_compat = 0.0
+
         # Detección de resonancias/sibilancia + recomendación reso_*/dyneq_*.
         # Se corre sobre `block` (crudo, pre-cadena) porque lo que interesa
         # es diagnosticar la fuente, no el resultado ya procesado. No se
@@ -150,6 +160,8 @@ def iter_mastering_chunks(audio: np.ndarray, sr: int,
             "peak_db": round(peak_db, 2),
             "rms_db": round(rms_db, 2),
             "lufs_momentary": round(lufs_chunk, 2),
+            "true_peak_db": round(true_peak, 2),
+            "mono_compatibility_db": round(mono_compat, 2),
             "stereo_correlation": round(corr, 3),
             "time_sec": round(start / sr, 2),
             "mb_meters": chain_meters.get("mb", {}),

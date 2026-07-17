@@ -1477,7 +1477,7 @@
       }
       .meters-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 0.6rem;
       }
       .meter-col {
@@ -4303,6 +4303,11 @@
                     <div class="meter-name">LUFS</div>
                     <div class="meter-readout" id="meterLufsReadout">-∞</div>
                   </div>
+                  <div class="meter-col">
+                    <div class="meter-track"><div class="meter-fill" id="meterTruePeakFill" style="height: 0%"></div></div>
+                    <div class="meter-name">True Peak</div>
+                    <div class="meter-readout" id="meterTruePeakReadout">-∞ dBTP</div>
+                  </div>
                 </div>
                 <div style="margin-top: 0.7rem">
                   <div class="meter-name" style="margin-bottom: 0.35rem">Stereo (correlación L/R)</div>
@@ -4311,6 +4316,7 @@
                     <div class="stereo-meter-fill" id="stereoMeterFill" style="left: 50%; width: 2px"></div>
                   </div>
                   <div class="meter-readout" id="stereoMeterReadout" style="margin-top: 0.28rem">corr: --</div>
+                  <div class="meter-readout" id="monoCompatReadout" style="margin-top: 0.28rem">mono: -- dB</div>
                 </div>
                 <div style="margin-top: 0.7rem; border-top: 1px solid var(--border); padding-top: 0.7rem">
                   <div class="meter-name" style="margin-bottom: 0.35rem">Espectro en tiempo real</div>
@@ -7864,7 +7870,13 @@ self.onmessage = function(e) {
           updateMeterFill("meterRmsFill", "meterRmsReadout", metrics.rms_db, (v) => v.toFixed(1) + " dB");
         if (metrics.lufs_momentary != null)
           updateMeterFill("meterLufsFill", "meterLufsReadout", metrics.lufs_momentary, (v) => v.toFixed(1) + " LUFS");
+        if (metrics.true_peak_db != null)
+          updateMeterFill("meterTruePeakFill", "meterTruePeakReadout", metrics.true_peak_db, (v) => formatDbValue(v));
         if (metrics.stereo_correlation != null) updateStereoMeter(metrics.stereo_correlation);
+        if (metrics.mono_compatibility_db != null) {
+          const monoEl = document.getElementById("monoCompatReadout");
+          if (monoEl) monoEl.textContent = `mono: ${metrics.mono_compatibility_db.toFixed(2)} dB`;
+        }
         renderChainMeters({
           mb: metrics.mb_meters || {},
           comp: metrics.comp_meters || {},
