@@ -299,6 +299,7 @@ def chat(user_message: str, history: Optional[list] = None,
         "Devolvé SOLO un objeto JSON plano (sin markdown, sin texto extra) con estas claves:\n"
         '- "reply": string, obligatorio, tu respuesta conversacional.\n'
         '- "suggestion_summary": string o null.\n'
+        '- "reasoning": string o null. Si proponés parámetros, explicá brevemente por qué y cuál es el fundamento técnico.\n'
         f"- Como número (float) o null si no lo tocás: {', '.join(float_field_names)}.\n"
         f"- Como booleano (true/false) o null si no lo tocás: {', '.join(BOOL_PARAM_FIELDS)}.\n"
         f"{enum_fields_hint}"
@@ -329,6 +330,7 @@ def chat(user_message: str, history: Optional[list] = None,
             "reply": fallback["reply"],
             "suggested_params": fallback["suggested_params"],
             "suggestion_summary": fallback["suggestion_summary"],
+            "suggestion_explanation": fallback.get("suggestion_explanation"),
         }
 
     reply_text = str(data.get("reply") or "").strip() or (
@@ -877,10 +879,12 @@ def build_fallback_response(user_message: str, analysis: Optional[dict]) -> dict
     message = (user_message or "").strip().lower()
     parsed_params = _parse_instruction_params(user_message)
     if parsed_params:
+        reply = f"Aplicaré ese ajuste directamente en la cadena DSP: {', '.join(parsed_params.keys())}."
         return {
-            "reply": f"Aplicaré ese ajuste directamente en la cadena DSP: {', '.join(parsed_params.keys())}.",
+            "reply": reply,
             "suggested_params": parsed_params,
             "suggestion_summary": "Ajuste DSP guiado por texto",
+            "suggestion_explanation": reply,
         }
 
     a = analysis or {}
@@ -960,6 +964,7 @@ def build_fallback_response(user_message: str, analysis: Optional[dict]) -> dict
         "reply": reply,
         "suggested_params": suggested,
         "suggestion_summary": summary,
+        "suggestion_explanation": reply,
     }
 
 
