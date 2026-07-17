@@ -2830,11 +2830,33 @@
 
                   <div style="margin-top:8px">
                     <label class="mini-label">Compresión paralela (opcional)</label>
-                    <div style="display:flex; gap:6px; align-items:center">
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
                       <input type="checkbox" id="parallelBypass" checked /> <label for="parallelBypass">Bypass</label>
                       <label style="margin-left:10px">Mix</label>
                       <input type="range" id="parallelMix" min="0" max="1" step="0.01" value="0.12" style="width:140px">
                       <span class="mini-tag" id="parallelMixVal">0.12</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; margin-top:0.75rem;">
+                      <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                        <label for="parallelThresh">Threshold</label>
+                        <input type="range" id="parallelThresh" min="-60" max="0" step="0.5" value="-12" style="width:100%">
+                        <span class="mini-tag" id="parallelThreshVal">-12 dB</span>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                        <label for="parallelRatio">Ratio</label>
+                        <input type="range" id="parallelRatio" min="1" max="20" step="0.5" value="4" style="width:100%">
+                        <span class="mini-tag" id="parallelRatioVal">4:1</span>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                        <label for="parallelAttack">Attack</label>
+                        <input type="range" id="parallelAttack" min="0.1" max="100" step="0.1" value="10" style="width:100%">
+                        <span class="mini-tag" id="parallelAttackVal">10 ms</span>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                        <label for="parallelRelease">Release</label>
+                        <input type="range" id="parallelRelease" min="5" max="1000" step="5" value="100" style="width:100%">
+                        <span class="mini-tag" id="parallelReleaseVal">100 ms</span>
+                      </div>
                     </div>
                   </div>
 
@@ -5642,10 +5664,11 @@
         // Dynamic EQ
         obj.parallel_bypass = document.getElementById("parallelBypass").checked;
         obj.parallel_mix = document.getElementById("parallelMix").value;
-        obj.parallel_threshold_db = document.getElementById("s-thresh").value;
-        obj.parallel_ratio = document.getElementById("s-ratio").value;
-        obj.parallel_attack_ms = document.getElementById("s-cattack").value;
-        obj.parallel_release_ms = document.getElementById("s-crelease").value;
+        obj.parallel_threshold_db = document.getElementById("parallelThresh").value;
+        obj.parallel_ratio = document.getElementById("parallelRatio").value;
+        obj.parallel_attack_ms = document.getElementById("parallelAttack").value;
+        obj.parallel_release_ms = document.getElementById("parallelRelease").value;
+        obj.ms_eq_bypass = document.getElementById("s-mseq-bypass").checked;
         obj.dyneq_bypass = document.getElementById("s-dyneq-bypass").checked;
         obj.dyneq_freq = document.getElementById("s-dyneq-freq").value;
         obj.dyneq_q = document.getElementById("s-dyneq-q").value;
