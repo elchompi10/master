@@ -1785,6 +1785,7 @@ def generate_mastering_recommendations(analysis: dict) -> dict:
     lufs = analysis.get("lufs", -99)
     dyn = analysis.get("dynamic_range_db", 0)
     true_peak = analysis.get("true_peak_db", -10)
+    mono_compat = analysis.get("mono_compatibility_db", 0.0)
 
     # Si está muy comprimido, sugerir compresión paralela suave
     if dyn < 6:
