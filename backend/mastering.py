@@ -115,6 +115,13 @@ class MasteringParams:
     # ── Reverb ───────────────────────────────────────────────────────────────
     reverb_size: float = 0.05
     reverb_wet: float = 0.0
+    # ── Compresión paralela (stage 5.5): mezcla dry/wet para control tonal
+    parallel_bypass: bool = True
+    parallel_threshold_db: float = -12.0
+    parallel_ratio: float = 4.0
+    parallel_attack_ms: float = 10.0
+    parallel_release_ms: float = 100.0
+    parallel_mix: float = 0.0  # 0 = 100% dry, 1 = 100% wet (procesado)
     # ── Clipper (pico suave/hard, previo al limitador) ──────────────────────
     clipper_bypass: bool = True
     clipper_mode: str = "soft"       # "soft" (tanh) | "hard"
@@ -1622,6 +1629,7 @@ def analyze_audio(audio: np.ndarray, sr: int) -> dict:
     shape = spectral_shape_features(mono, sr)
     st_loudness, _lra = short_term_loudness_and_lra(audio, sr)
     _band_crest, _band_corr = band_crest_and_stereo(audio, sr)
+    short_stats = short_term_loudness_stats(audio, sr)
 
     return {
         # ── Loudness / nivel ────────────────────────────────────────────
@@ -1651,6 +1659,7 @@ def analyze_audio(audio: np.ndarray, sr: int) -> dict:
         "zero_crossing_rate":   shape["zero_crossing_rate"],
         # ── Ritmo ────────────────────────────────────────────────────────
         "transient_density":  transient_density(mono, sr),
+        "short_term_stats":   short_stats,
         # ── Formato ──────────────────────────────────────────────────────
         "sample_rate":        sr,
         "channels":           1 if audio.ndim == 1 else audio.shape[0],
@@ -1764,6 +1773,33 @@ def mix_advice(analysis: dict) -> dict:
     score = max(0, min(100, score))
     grade = "Excelente" if score >= 85 else "Buena" if score >= 70 else "Aceptable" if score >= 50 else "Necesita trabajo"
     return {"score": score, "grade": grade, "issues": issues, "tips": tips}
+
+
+def generate_mastering_recommendations(analysis: dict) -> dict:
+    """Genera recomendaciones accionables de mastering (parámetros sugeridos)
+    a partir del análisis técnico del track. Devuelve un dict con `advice`
+    (lo mismo que `mix_advice`) y `suggested_params` con valores de ejemplo.
+    """
+    advice = mix_advice(analysis)
+    suggested = {}
+    lufs = analysis.get("lufs", -99)
+    dyn = analysis.get("dynamic_range_db", 0)
+    true_peak = analysis.get("true_peak_db", -10)
+
+    # Si está muy comprimido, sugerir compresión paralela suave
+    if dyn < 6:
+        suggested["parallel_mix"] = 0.12
+        suggested["parallel_threshold_db"] = -10.0
+        suggested["parallel_ratio"] = 3.0
+    # Si loudness demasiado alto, bajar makeup/limiter
+    if lufs > -9:
+        suggested["limiter_ceiling"] = 0.92
+        suggested["comp_makeup_db"] = max(-2.0, -1.0)
+    # True peak warning: bajar ceiling
+    if true_peak > -0.5:
+        suggested["limiter_ceiling"] = min(suggested.get("limiter_ceiling", 0.95), 0.94)
+
+    return {"advice": advice, "suggested_params": suggested}
 
 # ─── Loudness targets por plataforma ──────────────────────────────────────────
 
@@ -2429,6 +2465,13 @@ def apply_mastering_chain(
     comp_attack_ms: float = 10.0,
     comp_release_ms: float = 100.0,
     comp_makeup_db: float = 0.0,
+    # Compresión paralela (opcional)
+    parallel_bypass: bool = True,
+    parallel_threshold_db: float = -12.0,
+    parallel_ratio: float = 4.0,
+    parallel_attack_ms: float = 10.0,
+    parallel_release_ms: float = 100.0,
+    parallel_mix: float = 0.0,
     mb_low_crossover: float = 250.0,
     mb_high_crossover: float = 4000.0,
     mb_low_threshold_db: float = -18.0,
@@ -2637,6 +2680,27 @@ def apply_mastering_chain(
         oversample=ovs,
         stereo_link=comp_stereo_link,
     )
+
+    # ── 5.5 Compresión paralela: crear una copia comprimida y mezclar dry/wet
+    if not parallel_bypass and parallel_mix > 0.0:
+        _chain_progress(32, "Aplicando compresión paralela")
+        compressed, par_meters = compressor(
+            audio, sr,
+            threshold=10.0 ** (parallel_threshold_db / 20.0),
+            ratio=parallel_ratio,
+            attack_ms=parallel_attack_ms,
+            release_ms=parallel_release_ms,
+            makeup_db=0.0,
+            oversample=ovs,
+            stereo_link=comp_stereo_link,
+        )
+        try:
+            mix = float(np.clip(parallel_mix, 0.0, 1.0))
+        except Exception:
+            mix = 0.0
+        audio = (1.0 - mix) * audio + mix * compressed
+    else:
+        par_meters = {}
 
     # ── 6. EQ tonal / sweetening (eq4-6 + high shelf) ───────────────────────
     _chain_progress(35, "Aplicando ecualización tonal")
@@ -3107,6 +3171,8 @@ def process_audio(
         "analysis_after":    analysis_after,
         "mix_advice_before": mix_advice(analysis_before),
         "mix_advice_after":  mix_advice(analysis_after),
+        "recommendations_before": generate_mastering_recommendations(analysis_before),
+        "recommendations_after": generate_mastering_recommendations(analysis_after),
         "chain_meters":      chain_meters,
     }
 
