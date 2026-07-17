@@ -1168,6 +1168,68 @@
         border-radius: 7px;
         padding: 0.55rem;
       }
+      .professional-meter {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--green);
+        border-radius: 7px;
+        padding: 0.75rem;
+        margin-top: 0.7rem;
+      }
+      .professional-meter h3 {
+        font-size: 0.7rem;
+        font-family: var(--mono);
+        letter-spacing: 0.1em;
+        color: var(--green);
+        text-transform: uppercase;
+        margin-bottom: 0.85rem;
+      }
+      .professional-meter-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem;
+      }
+      .professional-meter-card {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        padding: 0.7rem;
+        display: grid;
+        gap: 0.15rem;
+      }
+      .professional-meter-card strong {
+        display: block;
+        font-size: 0.76rem;
+        font-family: var(--mono);
+        color: var(--muted);
+      }
+      .professional-meter-card span {
+        display: block;
+        font-size: 1.25rem;
+        font-weight: 700;
+        line-height: 1.1;
+      }
+      .professional-meter-card em {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+      .professional-meter-warning {
+        margin-top: 0.85rem;
+        padding: 0.65rem 0.75rem;
+        background: rgba(232, 160, 32, 0.08);
+        border: 1px solid rgba(232, 160, 32, 0.14);
+        border-radius: 7px;
+        font-size: 0.78rem;
+        color: var(--text);
+        line-height: 1.4;
+      }
+      .workflow-step.workflow-chip {
+        cursor: pointer;
+      }
+      .workflow-step.workflow-chip:hover {
+        transform: translateY(-1px);
+      }
       .analysis-panel h3 {
         font-size: 0.7rem;
         font-family: var(--mono);
@@ -4119,19 +4181,19 @@
               </p>
             </div>
             <div class="workflow-steps">
-              <div class="workflow-step">
+              <div class="workflow-step workflow-chip">
                 <strong>1 · Entrada</strong>
                 Archivo + preset + referencia
               </div>
-              <div class="workflow-step">
+              <div class="workflow-step workflow-chip">
                 <strong>2 · Análisis</strong>
                 LUFS, dinámica y espectro
               </div>
-              <div class="workflow-step">
+              <div class="workflow-step workflow-chip">
                 <strong>3 · Cadena</strong>
                 EQ, compresión, estéreo y limiter
               </div>
-              <div class="workflow-step">
+              <div class="workflow-step workflow-chip">
                 <strong>4 · Entrega</strong>
                 Preview, stems y descarga
               </div>
@@ -5910,7 +5972,7 @@
       function clearResults() {
         const c = getContent();
         c.querySelectorAll(
-          ".status-bar,.analysis-grid,.spectrum-wrap,.fft-wrap,.advice-panel,.ab-wrap,.loudness-meter,.waveform-wrap,.ref-match-panel,.stems-wrap",
+          ".status-bar,.analysis-grid,.spectrum-wrap,.fft-wrap,.advice-panel,.ab-wrap,.loudness-meter,.professional-meter,.waveform-wrap,.ref-match-panel,.stems-wrap",
         ).forEach((el) => el.remove());
       }
       function showStatus(id, text, state, progress, stage) {
@@ -7023,6 +7085,7 @@
         grid.className = "analysis-grid";
         grid.innerHTML = `<div class="analysis-panel"><h3>Métricas del audio</h3>${metricsHtml(a, null)}</div>`;
         getContent().appendChild(grid);
+        renderProfessionalMeter(a);
         renderSpectrum([a], ["before"]);
       }
 
@@ -7031,6 +7094,7 @@
         grid.className = "analysis-grid";
         grid.innerHTML = `<div class="analysis-panel"><h3>Antes</h3>${metricsHtml(before, null)}</div><div class="analysis-panel"><h3>Después</h3>${metricsHtml(after, before)}</div>`;
         getContent().appendChild(grid);
+        renderProfessionalMeter(after);
         renderSpectrum([before, after], ["before", "after"]);
         if (before.fft_spectrum && after.fft_spectrum) {
           renderFFT([
@@ -7045,6 +7109,76 @@
         const el = document.getElementById("previewStatus");
         if (el) el.textContent = text;
       }
+      function renderProfessionalMeter(a) {
+        if (!a) return;
+        const existing = document.querySelector(".professional-meter");
+        if (existing) existing.remove();
+        const wrap = document.createElement("div");
+        wrap.className = "professional-meter";
+        const rows = [
+          {
+            label: "True Peak",
+            value: a.true_peak_db,
+            unit: "dBTP",
+            status: a.true_peak_db > -0.5 ? "bad" : a.true_peak_db > -1.2 ? "warn" : "good",
+            hint: "Inter-sample peak real",
+          },
+          {
+            label: "PLR",
+            value: a.plr_db,
+            unit: "dB",
+            status: a.plr_db > 10 ? "good" : a.plr_db > 6 ? "warn" : "bad",
+            hint: "Peak-to-Loudness Ratio",
+          },
+          {
+            label: "Dinámica",
+            value: a.dynamic_range_db,
+            unit: "dB",
+            status: a.dynamic_range_db >= 10 ? "good" : a.dynamic_range_db >= 6 ? "warn" : "bad",
+            hint: "Rango dinámico global",
+          },
+          {
+            label: "Correlación estéreo",
+            value: a.stereo_correlation,
+            unit: "",
+            status: a.stereo_correlation < 0.85 ? "warn" : "good",
+            hint: "L/R total",
+          },
+          {
+            label: "Mono compatibilidad",
+            value: a.mono_compatibility_db,
+            unit: "dB",
+            status: a.mono_compatibility_db < -5 ? "bad" : a.mono_compatibility_db < -3 ? "warn" : "good",
+            hint: "Pérdida al sumar L+R",
+          },
+          {
+            label: "Loudness",
+            value: a.lufs,
+            unit: "LUFS",
+            status: a.lufs >= -14 && a.lufs <= -9 ? "good" : a.lufs >= -18 && a.lufs < -14 ? "warn" : "bad",
+            hint: "LUFS integrado",
+          },
+        ];
+        const cards = rows
+          .map((item) => {
+            const suffix = item.unit ? ` ${item.unit}` : "";
+            return `<div class="professional-meter-card"><strong>${item.label}</strong><span class="metric-value ${item.status}">${item.value != null ? item.value.toFixed(item.unit === "" ? 3 : 1) + suffix : "--"}</span><em>${item.hint}</em></div>`;
+          })
+          .join("");
+        const warnings = [];
+        if (a.true_peak_db != null && a.true_peak_db > -0.5) warnings.push("True peak peligroso: ajustá el ceiling para evitar clipping inter-sample.");
+        if (a.mono_compatibility_db != null && a.mono_compatibility_db < -5) warnings.push("Compatibilidad mono baja: el mix puede colapsar al sumarlo a mono.");
+        if (a.stereo_correlation != null && a.stereo_correlation < 0.8) warnings.push("Correlación estéreo baja: el paneo o los efectos pueden generar huecos o cancelaciones.");
+        if (a.dynamic_range_db != null && a.dynamic_range_db < 6) warnings.push("Dinámica muy comprimida: cuidado con el limiteador para no aplastar el groove.");
+        if (a.lufs != null && a.lufs > -9) warnings.push("El loudness ya es alto para streaming, mantené el ceiling conservador.");
+        wrap.innerHTML = `
+          <h3>Professional Metering</h3>
+          <div class="professional-meter-grid">${cards}</div>
+          ${warnings.length ? `<div class="professional-meter-warning">${warnings.map((line) => `• ${line}`).join("<br>")}</div>` : ""}
+        `;
+        getContent().appendChild(wrap);
+      }
+
       function setPreviewUpdating(v) {
         const dot = document.getElementById("previewDot");
         if (dot) dot.classList.toggle("updating", v);
