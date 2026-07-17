@@ -99,6 +99,8 @@ def build_routes(job_service: JobService, audio_service: AudioService, upload_di
             job["analysis_after"] = job["result"]["analysis_after"]
             job["mix_advice_before"] = job["result"]["mix_advice_before"]
             job["mix_advice_after"] = job["result"]["mix_advice_after"]
+            job["recommendations_before"] = job["result"].get("recommendations_before")
+            job["recommendations_after"] = job["result"].get("recommendations_after")
             job["chain_meters"] = job["result"].get("chain_meters", {})
             job["output_bit_depth"] = job["result"].get("output_bit_depth")
             if "reference_match" in job["result"]:
@@ -139,6 +141,8 @@ def build_routes(job_service: JobService, audio_service: AudioService, upload_di
             "analysis_after": job["result"]["analysis_after"],
             "mix_advice_before": job["result"]["mix_advice_before"],
             "mix_advice_after": job["result"]["mix_advice_after"],
+            "recommendations_before": job["result"].get("recommendations_before"),
+            "recommendations_after": job["result"].get("recommendations_after"),
             "chain_meters": job["result"].get("chain_meters", {}),
         }
         if "reference_match" in job["result"]:

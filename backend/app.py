@@ -1697,6 +1697,8 @@ def get_job(job_id: str):
         job["analysis_after"]    = job["result"]["analysis_after"]
         job["mix_advice_before"] = job["result"]["mix_advice_before"]
         job["mix_advice_after"]  = job["result"]["mix_advice_after"]
+        job["recommendations_before"] = job["result"].get("recommendations_before")
+        job["recommendations_after"] = job["result"].get("recommendations_after")
         job["chain_meters"]      = job["result"].get("chain_meters", {})
         job["output_bit_depth"]  = job["result"].get("output_bit_depth")
         if "reference_match" in job["result"]:
@@ -1737,6 +1739,8 @@ def export_report(job_id: str):
         "analysis_after": job["result"]["analysis_after"],
         "mix_advice_before": job["result"]["mix_advice_before"],
         "mix_advice_after": job["result"]["mix_advice_after"],
+        "recommendations_before": job["result"].get("recommendations_before"),
+        "recommendations_after": job["result"].get("recommendations_after"),
         "chain_meters": job["result"].get("chain_meters", {}),
     }
     if "reference_match" in job["result"]:

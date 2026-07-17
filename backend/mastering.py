@@ -2885,6 +2885,13 @@ def process_audio(
     comp_attack_ms: float = 10.0,
     comp_release_ms: float = 100.0,
     comp_makeup_db: float = 0.0,
+    # Compresión paralela (opcional)
+    parallel_bypass: bool = True,
+    parallel_threshold_db: float = -12.0,
+    parallel_ratio: float = 4.0,
+    parallel_attack_ms: float = 10.0,
+    parallel_release_ms: float = 100.0,
+    parallel_mix: float = 0.0,
     mb_low_crossover: float = 250.0,
     mb_high_crossover: float = 4000.0,
     mb_low_threshold_db: float = -18.0,
@@ -3064,6 +3071,9 @@ def process_audio(
         clipper_ceiling=clipper_ceiling, clipper_drive_db=clipper_drive_db,
         limiter_ceiling=limiter_ceiling, limiter_release_ms=limiter_release_ms,
         nr_bypass=nr_bypass, nr_strength=nr_strength, nr_noise_sample_sec=nr_noise_sample_sec,
+        parallel_bypass=parallel_bypass, parallel_threshold_db=parallel_threshold_db,
+        parallel_ratio=parallel_ratio, parallel_attack_ms=parallel_attack_ms,
+        parallel_release_ms=parallel_release_ms, parallel_mix=parallel_mix,
     )
     # MEJORA (perf): la reducción de ruido (etapa 0 de la cadena) opera sobre
     # el audio ANTES de aplicarse input_gain_db, así que su resultado no
@@ -3725,6 +3735,8 @@ def process_audio_with_reference(
         "analysis_reference": analysis_reference,
         "mix_advice_before": mix_advice(analysis_before),
         "mix_advice_after":  mix_advice(analysis_after),
+        "recommendations_before": generate_mastering_recommendations(analysis_before),
+        "recommendations_after": generate_mastering_recommendations(analysis_after),
         "reference_match": {
             "before":                  match_before,
             "after_eq":                match_after_eq,
