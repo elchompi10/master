@@ -5653,7 +5653,7 @@
         // EQ Mode
         obj.eq_mode = document.getElementById("s-eq-mode").value;
         obj.linear_phase_taps = document.getElementById("s-lp-taps").value;
-        if (platform) obj.platform_target = platform;
+        obj.platform_target = document.getElementById("s-platform")?.value || null;
         return obj;
       }
       function buildParams() {
