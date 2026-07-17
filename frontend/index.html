@@ -2490,6 +2490,16 @@
       .ai-suggestion-cancel-btn:hover {
         background: var(--surface2);
       }
+      .ai-suggestion-explanation {
+        color: var(--text);
+        font-size: 0.72rem;
+        line-height: 1.4;
+        background: rgba(232, 160, 32, 0.06);
+        border: 1px solid rgba(232, 160, 32, 0.14);
+        border-radius: 6px;
+        padding: 0.45rem 0.6rem;
+        font-family: var(--sans);
+      }
       .ai-suggestion-apply-btn:disabled,
       .ai-suggestion-cancel-btn:disabled {
         cursor: default;
@@ -8025,7 +8035,7 @@ self.onmessage = function(e) {
         return div;
       }
 
-      function aiAppendSuggestionCard(suggestedParams, summary) {
+      function aiAppendSuggestionCard(suggestedParams, summary, explanation) {
         const wrap = aiEl("aiMessages");
         const card = document.createElement("div");
         card.className = "ai-suggestion-card";
@@ -8035,6 +8045,13 @@ self.onmessage = function(e) {
           title.className = "ai-suggestion-card-title";
           title.textContent = summary;
           card.appendChild(title);
+        }
+
+        if (explanation) {
+          const explain = document.createElement("div");
+          explain.className = "ai-suggestion-explanation";
+          explain.textContent = explanation;
+          card.appendChild(explain);
         }
 
         const list = document.createElement("ul");
@@ -8185,7 +8202,7 @@ self.onmessage = function(e) {
           const data = await res.json();
           aiAppendMessage("assistant", data.reply);
           if (data.suggested_params && Object.keys(data.suggested_params).length) {
-            aiAppendSuggestionCard(data.suggested_params, data.suggestion_summary);
+            aiAppendSuggestionCard(data.suggested_params, data.suggestion_summary, data.suggestion_explanation);
           }
           aiChatHistory.push({ role: "user", content: msg });
           aiChatHistory.push({ role: "assistant", content: data.reply });

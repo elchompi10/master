@@ -1799,7 +1799,35 @@ def generate_mastering_recommendations(analysis: dict) -> dict:
     if true_peak > -0.5:
         suggested["limiter_ceiling"] = min(suggested.get("limiter_ceiling", 0.95), 0.94)
 
-    return {"advice": advice, "suggested_params": suggested}
+    recommendation_text = []
+    if mono_compat < -3.0:
+        recommendation_text.append(
+            "Se recomienda reducir 1.5 dB de graves para mejorar la compatibilidad mono y evitar cancelaciones de fase."
+        )
+    if true_peak > -0.5:
+        recommendation_text.append(
+            "Se recomienda bajar el ceiling del limiter a 0.94 dBFS para evitar clipping inter-sample."
+        )
+    if lufs > -9:
+        recommendation_text.append(
+            "Se recomienda bajar el makeup gain del compresor o el ceiling del limiter para hacer el master más estable en streaming."
+        )
+    if lufs < -20:
+        recommendation_text.append(
+            "Se recomienda subir el nivel general con normalización LUFS para que el track no suene demasiado bajo."
+        )
+    if dyn < 6:
+        recommendation_text.append(
+            "Se recomienda usar compresión paralela suave y relajar un poco el ratio principal para preservar la dinámica."
+        )
+    if not recommendation_text:
+        recommendation_text.append("La mezcla está técnicamente equilibrada; podés continuar con estos ajustes o comparar con referencia.")
+
+    return {
+        "advice": advice,
+        "suggested_params": suggested,
+        "recommendation_text": recommendation_text,
+    }
 
 # ─── Loudness targets por plataforma ──────────────────────────────────────────
 

@@ -365,6 +365,7 @@ def chat(user_message: str, history: Optional[list] = None,
         "reply": reply_text,
         "suggested_params": suggested,
         "suggestion_summary": (str(data.get("suggestion_summary") or "").strip() or None),
+        "suggestion_explanation": (str(data.get("reasoning") or "").strip() or None),
     }
 
 
